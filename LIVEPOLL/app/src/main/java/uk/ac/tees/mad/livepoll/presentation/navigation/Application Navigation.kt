@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import uk.ac.tees.mad.livepoll.presentation.ui.LoginScreen
+import uk.ac.tees.mad.livepoll.presentation.ui.PollScreen
 import uk.ac.tees.mad.livepoll.presentation.ui.SignUp
 import uk.ac.tees.mad.livepoll.presentation.ui.SplashScreen
 import uk.ac.tees.mad.livepoll.presentation.viewmodel.PollViewModel
@@ -35,6 +36,9 @@ fun ApplicationNavigation(){
         }
         composable(route = ApplicationNavigation.Signup.route){
             SignUp(vm = viewModel,navController = navController)
+        }
+        composable(route = ApplicationNavigation.Poll.route){
+            PollScreen()
         }
     }
 }

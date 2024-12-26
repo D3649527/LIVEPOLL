@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -79,11 +80,15 @@ fun LoginScreen(vm : PollViewModel, navController: NavController) {
                 }
             },  modifier = Modifier.fillMaxWidth())
         Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = { /*TODO*/ }, modifier = Modifier.fillMaxWidth(),
+        Button(onClick = { vm.login(context,email.value,password.value) }, modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(5.dp),colors = ButtonDefaults.buttonColors(
                 Color.Black)
         ) {
-            Text(text = "LOG IN")
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else {
+                Text(text = "LOG IN")
+            }
         }
         Spacer(modifier = Modifier.height(20.dp))
         Text(text = "Enter your email and password to log in")
