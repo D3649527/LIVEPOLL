@@ -78,8 +78,10 @@ class PollViewModel @Inject constructor(
         onValidationError: (String) -> Unit,
         onSuccess: () -> Unit,
     ) {
+        isLoading.value = true
         if (selectedDateMillis == null || selectedTime == null) {
             onValidationError("Please select a valid date and time.")
+            isLoading.value = false
             return
         }
         val selectedCalendar = Calendar.getInstance().apply {
@@ -90,6 +92,7 @@ class PollViewModel @Inject constructor(
         val currentCalendar = Calendar.getInstance()
         if (selectedCalendar.before(currentCalendar)) {
             onValidationError("Selected date and time cannot be in the past.")
+            isLoading.value = false
             return
         }
         val pollData = mapOf(
@@ -103,7 +106,15 @@ class PollViewModel @Inject constructor(
             firestore.collection(POLLS)
                 .add(pollData)
                 .addOnSuccessListener {
-                    onSuccess()
+                    val id = it.id
+                    firestore.collection(POLLS).document(id).update("id", id).addOnSuccessListener {
+                        isLoading.value = false
+                        onSuccess()
+                    }
+                        .addOnFailureListener {
+                            isLoading.value = false
+                            onValidationError("Failed to create poll. Please try again.")
+                        }
                 }
                 .addOnFailureListener {
                     onValidationError("Failed to create poll. Please try again.")

@@ -1,8 +1,10 @@
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -43,73 +45,82 @@ fun CreatePoll(viewModel: PollViewModel) {
         }, onDismiss = { showDatePicker = false })
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(100.dp))
-        Text(text = "Create Poll", fontSize = 36.sp, color = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.height(20.dp))
-
-        PollInputField(label = "Poll Question:", value = question, onValueChange = { question = it })
-        Spacer(modifier = Modifier.height(20.dp))
-        PollInputField(label = "Option 1", value = option1, onValueChange = { option1 = it })
-        Spacer(modifier = Modifier.height(20.dp))
-        PollInputField(label = "Option 2", value = option2, onValueChange = { option2 = it })
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+    Box {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            DateTimePicker(
-                label = "Pick Time",
-                selectedValue = selectedTime?.let {
-                    Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, it.hour)
-                        set(Calendar.MINUTE, it.minute)
-                    }.let { cal -> timeFormatter.format(cal.time) }
-                } ?: "No time selected.",
-                onClick = { showTimePicker = true }
-            )
+            Spacer(modifier = Modifier.height(100.dp))
+            Text(text = "Create Poll", fontSize = 36.sp, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(20.dp))
 
-            DateTimePicker(
-                label = "Pick Date",
-                selectedValue = selectedDate?.selectedDateMillis?.let { millis ->
-                    dateFormatter.format(Date(millis))
-                } ?: "No date selected.",
-                onClick = { showDatePicker = true }
-            )
-        }
+            PollInputField(
+                label = "Poll Question:",
+                value = question,
+                onValueChange = { question = it })
+            Spacer(modifier = Modifier.height(20.dp))
+            PollInputField(label = "Option 1", value = option1, onValueChange = { option1 = it })
+            Spacer(modifier = Modifier.height(20.dp))
+            PollInputField(label = "Option 2", value = option2, onValueChange = { option2 = it })
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                DateTimePicker(
+                    label = "Pick Time",
+                    selectedValue = selectedTime?.let {
+                        Calendar.getInstance().apply {
+                            set(Calendar.HOUR_OF_DAY, it.hour)
+                            set(Calendar.MINUTE, it.minute)
+                        }.let { cal -> timeFormatter.format(cal.time) }
+                    } ?: "No time selected.",
+                    onClick = { showTimePicker = true }
+                )
 
-        // Display error message if there's any validation error
-        if (errorMessage != null) {
-            Text(text = errorMessage!!, color = Color.Red)
+                DateTimePicker(
+                    label = "Pick Date",
+                    selectedValue = selectedDate?.selectedDateMillis?.let { millis ->
+                        dateFormatter.format(Date(millis))
+                    } ?: "No date selected.",
+                    onClick = { showDatePicker = true }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (errorMessage != null) {
+                Text(text = errorMessage!!, color = Color.Red)
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            ActionButton(text = "CREATE POLL", onClick = {
+                viewModel.createPoll(
+                    question = question,
+                    option1 = option1,
+                    option2 = option2,
+                    selectedDateMillis = selectedDate?.selectedDateMillis,
+                    selectedTime = selectedTime,
+                    onValidationError = { error ->
+                        errorMessage = error
+                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                    },
+                    onSuccess = {
+                        errorMessage = null
+                        // Navigate to the poll list or show success message
+                    }
+                )
+            })
             Spacer(modifier = Modifier.height(10.dp))
+            ActionButton(text = "HOME", onClick = { /*TODO: Navigate home*/ })
         }
-
-        ActionButton(text = "CREATE POLL", onClick = {
-            viewModel.createPoll(
-                question = question,
-                option1 = option1,
-                option2 = option2,
-                selectedDateMillis = selectedDate?.selectedDateMillis,
-                selectedTime = selectedTime,
-                onValidationError = { error ->
-                                    errorMessage = error
-                                    Toast.makeText(context, error,Toast.LENGTH_SHORT).show()
-                                    },
-                onSuccess = {
-                    errorMessage = null
-                    // Navigate to the poll list or show success message
-                }
-            )
-        })
-        Spacer(modifier = Modifier.height(10.dp))
-        ActionButton(text = "HOME", onClick = { /*TODO: Navigate home*/ })
+    }
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)),
+        contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.material.CircularProgressIndicator()
     }
 }
 
@@ -130,7 +141,7 @@ fun PollInputField(label: String, value: String, onValueChange: (String) -> Unit
 fun DateTimePicker(label: String, selectedValue: String, onClick: () -> Unit) {
     Column {
         Text(text = selectedValue)
-        Button(onClick = onClick) {
+        Button(onClick = onClick, shape = RoundedCornerShape(5.dp)) {
             Text(text = label)
         }
     }
@@ -213,10 +224,9 @@ fun DatePicker(
     AlertDialog(
         onDismissRequest = { onDismiss() },
         properties = DialogProperties(
-            usePlatformDefaultWidth = false // Allows custom width
+            usePlatformDefaultWidth = false
         )
     ) {
-        // Using BoxWithConstraints to adjust the layout dynamically
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
@@ -225,14 +235,13 @@ fun DatePicker(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight(),  // Ensure height wraps content
+                    .wrapContentHeight(),
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surface
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),  // Padding for inner content
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.Center
                 ) {
                     DatePicker(state = datePickerState)
