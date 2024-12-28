@@ -3,13 +3,19 @@ package uk.ac.tees.mad.livepoll.presentation.viewmodel
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import uk.ac.tees.mad.livepoll.POLLS
 import uk.ac.tees.mad.livepoll.USER
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -60,6 +66,49 @@ class PollViewModel @Inject constructor(
     }
 
     fun fetchUserData() {
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    fun createPoll(
+        question: String,
+        option1: String,
+        option2: String,
+        selectedDateMillis: Long?,
+        selectedTime: TimePickerState?,
+        onValidationError: (String) -> Unit,
+        onSuccess: () -> Unit,
+    ) {
+        if (selectedDateMillis == null || selectedTime == null) {
+            onValidationError("Please select a valid date and time.")
+            return
+        }
+        val selectedCalendar = Calendar.getInstance().apply {
+            timeInMillis = selectedDateMillis
+            set(Calendar.HOUR_OF_DAY, selectedTime.hour)
+            set(Calendar.MINUTE, selectedTime.minute)
+        }
+        val currentCalendar = Calendar.getInstance()
+        if (selectedCalendar.before(currentCalendar)) {
+            onValidationError("Selected date and time cannot be in the past.")
+            return
+        }
+        val pollData = mapOf(
+            "question" to question,
+            "option1" to mapOf("text" to option1, "votes" to 0),
+            "option2" to mapOf("text" to option2, "votes" to 0),
+            "endTime" to selectedCalendar.time,
+            "status" to "active"
+        )
+        viewModelScope.launch {
+            firestore.collection(POLLS)
+                .add(pollData)
+                .addOnSuccessListener {
+                    onSuccess()
+                }
+                .addOnFailureListener {
+                    onValidationError("Failed to create poll. Please try again.")
+                }
+        }
     }
 
 }
