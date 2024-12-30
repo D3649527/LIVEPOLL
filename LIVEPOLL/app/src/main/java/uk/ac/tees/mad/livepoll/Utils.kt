@@ -5,6 +5,8 @@ import androidx.navigation.NavController
 const val USER = "user"
 const val POLLS = "polls"
 
+
+
 fun navigateWithBackStack(navController: NavController, route : String){
     navController.navigate(route)
 }

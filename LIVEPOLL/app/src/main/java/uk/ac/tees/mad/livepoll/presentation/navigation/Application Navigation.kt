@@ -42,7 +42,7 @@ fun ApplicationNavigation(){
             PollScreen(navController)
         }
         composable(route = ApplicationNavigation.Create.route){
-            CreatePoll(viewModel)
+            CreatePoll(viewModel, navController)
         }
     }
 }

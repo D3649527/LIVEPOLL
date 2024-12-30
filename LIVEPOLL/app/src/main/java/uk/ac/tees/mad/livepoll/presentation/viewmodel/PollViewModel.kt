@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import uk.ac.tees.mad.livepoll.POLLS
 import uk.ac.tees.mad.livepoll.USER
+import uk.ac.tees.mad.livepoll.data.PollData
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -27,10 +28,22 @@ class PollViewModel @Inject constructor(
 
     val isLoading = mutableStateOf(false)
     val isLoggedIn = mutableStateOf(false)
+    val pollData = mutableStateOf<List<PollData>?>(null)
 
     init {
         isLoggedIn.value = auth.currentUser != null
+        if (isLoggedIn.value) {
+            fetchPollData()
+        }
+    }
 
+    private fun fetchPollData(){
+        firestore.collection(POLLS).get().addOnSuccessListener {
+            pollData.value = it.toObjects(PollData::class.java)
+            Log.d("POLLS", "fetchPollData: ${pollData.value}")
+        }.addOnFailureListener {
+            Log.d("POLLS", "fetchPollData: ${it.message}")
+        }
     }
 
     fun signUp(context: Context, email: String, password: String) {

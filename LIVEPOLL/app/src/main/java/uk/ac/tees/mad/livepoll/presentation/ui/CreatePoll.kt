@@ -11,13 +11,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
+import uk.ac.tees.mad.livepoll.navigateWithoutBackStack
+import uk.ac.tees.mad.livepoll.presentation.navigation.ApplicationNavigation
 import uk.ac.tees.mad.livepoll.presentation.viewmodel.PollViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreatePoll(viewModel: PollViewModel) {
+fun CreatePoll(viewModel: PollViewModel, navController : NavController) {
+    val isLoading = viewModel.isLoading
     var question by remember { mutableStateOf("") }
     var option1 by remember { mutableStateOf("") }
     var option2 by remember { mutableStateOf("") }
@@ -109,7 +113,7 @@ fun CreatePoll(viewModel: PollViewModel) {
                     },
                     onSuccess = {
                         errorMessage = null
-                        // Navigate to the poll list or show success message
+                        navigateWithoutBackStack(navController, ApplicationNavigation.Poll.route)
                     }
                 )
             })
@@ -117,10 +121,13 @@ fun CreatePoll(viewModel: PollViewModel) {
             ActionButton(text = "HOME", onClick = { /*TODO: Navigate home*/ })
         }
     }
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)),
-        contentAlignment = Alignment.Center
+    if(isLoading.value) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
         ) {
             androidx.compose.material.CircularProgressIndicator()
+        }
     }
 }
 
