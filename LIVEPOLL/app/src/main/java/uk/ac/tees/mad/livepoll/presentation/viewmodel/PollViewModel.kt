@@ -10,6 +10,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.RemoteMessage
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -123,6 +125,7 @@ class PollViewModel @Inject constructor(
                     firestore.collection(POLLS).document(id).update("id", id).addOnSuccessListener {
                         isLoading.value = false
                         onSuccess()
+                        notifyUsersAboutNewPoll(question)
                     }
                         .addOnFailureListener {
                             isLoading.value = false
@@ -133,6 +136,37 @@ class PollViewModel @Inject constructor(
                     onValidationError("Failed to create poll. Please try again.")
                 }
         }
+    }
+
+    fun notifyUsersAboutNewPoll(pollQuestion: String) {
+        // Fetch all user FCM tokens from Firestore
+        firestore.collection(USER).get().addOnSuccessListener { users ->
+            for (user in users.documents) {
+                val fcmToken = user.getString("fcmToken") ?: continue
+                if (fcmToken != FirebaseAuth.getInstance().currentUser?.uid) {
+                    sendNotificationToUser(fcmToken, pollQuestion)
+                }
+            }
+        }.addOnFailureListener {
+            Log.e("FCM", "Error fetching users: ${it.message}")
+        }
+    }
+
+    private fun sendNotificationToUser(token: String, pollQuestion: String) {
+        val message = RemoteMessage.Builder("$token@fcm.googleapis.com")
+            .setMessageId("poll_${System.currentTimeMillis()}")
+            .addData("title", "New Poll Available!")
+            .addData("body", pollQuestion)
+            .build()
+
+        FirebaseMessaging.getInstance().subscribeToTopic("new_polls")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("FCM", "Subscribed to new_polls topic")
+                } else {
+                    Log.e("FCM", "Subscription failed", task.exception)
+                }
+            }
     }
 
 }

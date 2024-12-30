@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+    implementation (libs.firebase.messaging)
+
 
     //work manager
     implementation ("androidx.work:work-runtime-ktx:2.7.1")
