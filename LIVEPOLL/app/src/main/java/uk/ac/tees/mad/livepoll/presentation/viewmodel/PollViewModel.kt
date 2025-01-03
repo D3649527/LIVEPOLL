@@ -169,4 +169,14 @@ class PollViewModel @Inject constructor(
             }
     }
 
+    fun getPollById(id: String?):PollData {
+        var response = PollData()
+        firestore.collection(POLLS).document(id!!).get().addOnSuccessListener {
+            response = it.toObject(PollData::class.java)!!
+        }.addOnFailureListener {
+            response = PollData()
+        }
+        return response
+    }
+
 }

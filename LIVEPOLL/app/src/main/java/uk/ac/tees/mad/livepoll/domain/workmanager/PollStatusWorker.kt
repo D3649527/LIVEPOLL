@@ -20,7 +20,7 @@ class PollStatusWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            val currentTime = Calendar.getInstance().timeInMillis
+            val currentTime = com.google.firebase.Timestamp.now()
             Log.d("PollWorker", "Current time in millis: $currentTime")
 
             val activePolls = firestore.collection("polls")
