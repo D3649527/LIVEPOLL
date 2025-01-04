@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import uk.ac.tees.mad.livepoll.presentation.ui.LoginScreen
+import uk.ac.tees.mad.livepoll.presentation.ui.OfflinePolls
 import uk.ac.tees.mad.livepoll.presentation.ui.SignUp
 import uk.ac.tees.mad.livepoll.presentation.ui.SplashScreen
 import uk.ac.tees.mad.livepoll.presentation.viewmodel.PollViewModel
@@ -27,6 +28,7 @@ sealed class ApplicationNavigation(val route : String){
         fun createRoute(pollId : String) = "poll/$pollId"
     }
     object Profile : ApplicationNavigation("profile")
+    object Offline : ApplicationNavigation("offline")
 }
 
 @Composable
@@ -62,6 +64,9 @@ fun ApplicationNavigation(){
             }
             composable(route = ApplicationNavigation.Profile.route) {
                 ProfileScreen(viewModel, navController)
+            }
+            composable(route = ApplicationNavigation.Offline.route) {
+                OfflinePolls(viewModel, navController)
             }
         }
     }

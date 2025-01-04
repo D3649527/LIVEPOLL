@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import uk.ac.tees.mad.livepoll.navigateWithBackStack
 import uk.ac.tees.mad.livepoll.navigateWithoutBackStack
 import uk.ac.tees.mad.livepoll.presentation.navigation.ApplicationNavigation
 import uk.ac.tees.mad.livepoll.presentation.viewmodel.PollViewModel
@@ -163,10 +164,22 @@ fun ProfileScreen(viewModel: PollViewModel, navController: NavHostController) {
 
                 Button(
                     onClick = {
+                        navigateWithBackStack(navController, ApplicationNavigation.Offline.route)
+                              },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(MaterialTheme.colors.primary)
+                ) {
+                    Text("User created polls")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
                         viewModel.logOut()
                         Toast.makeText(context, "Logged Out", Toast.LENGTH_SHORT).show()
                         navigateWithoutBackStack(navController, ApplicationNavigation.Login.route)
-                              },
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(MaterialTheme.colors.error)
                 ) {

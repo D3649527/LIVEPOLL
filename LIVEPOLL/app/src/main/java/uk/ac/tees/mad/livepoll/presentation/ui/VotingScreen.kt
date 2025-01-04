@@ -3,6 +3,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -69,7 +70,6 @@ fun VotingScreen(viewModel: PollViewModel, navController: NavHostController, id:
             )
 
             if (poll.status == "archive") {
-                // Determine the winner
                 val option1Name = poll.option1["text"] as String
                 val option2Name = poll.option2["text"] as String
                 val option1Votes = poll.option1["votes"] as Long
@@ -190,13 +190,15 @@ fun BarChart(option1Name: String, option1Votes: Long, option2Name: String, optio
             color = Color.LightGray,
             shape = RoundedCornerShape(8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(option1Percentage)
-                    .background(Color.Blue)
-                    .height(30.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(option1Percentage)
+                        .background(Color.Blue)
+                        .height(30.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            }
         }
         Text(text = "${String.format("%.1f", option1Percentage * 100)}%", color = Color.Blue)
 
@@ -211,14 +213,17 @@ fun BarChart(option1Name: String, option1Votes: Long, option2Name: String, optio
             color = Color.LightGray,
             shape = RoundedCornerShape(8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(option2Percentage)
-                    .background(Color.Red)
-                    .height(30.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(option2Percentage)
+                        .background(Color.Red)
+                        .height(30.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            }
         }
         Text(text = "${String.format("%.1f", option2Percentage * 100)}%", color = Color.Red)
     }
 }
+

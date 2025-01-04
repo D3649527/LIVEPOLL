@@ -30,6 +30,8 @@ import uk.ac.tees.mad.livepoll.POLLS
 import uk.ac.tees.mad.livepoll.R
 import uk.ac.tees.mad.livepoll.USER
 import uk.ac.tees.mad.livepoll.USER_VOTES
+import uk.ac.tees.mad.livepoll.data.Poll
+import uk.ac.tees.mad.livepoll.data.PollDao
 import uk.ac.tees.mad.livepoll.data.PollData
 import uk.ac.tees.mad.livepoll.data.userData
 import java.io.IOException
@@ -41,26 +43,59 @@ class PollViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val firebaseStorage: FirebaseStorage,
+    private val pollDao: PollDao
 ) : ViewModel() {
 
     val isLoading = mutableStateOf(false)
     val isLoggedIn = mutableStateOf(false)
     val pollData = mutableStateOf<List<PollData>?>(null)
     val user = mutableStateOf<userData?>(null)
+    val offlinePollData = mutableStateOf<List<Poll>?>(null)
 
     init {
         isLoggedIn.value = auth.currentUser != null
         if (isLoggedIn.value) {
             Log.d("Init", "init: ${auth.currentUser?.uid}")
-            fetchPollData()
             fetchUserData()
         }
+        fetchPollData()
+        fetchOfflinePolls()
+    }
+
+    private fun fetchOfflinePolls() {
+        viewModelScope.launch {
+            offlinePollData.value = pollDao.getAllPolls()
+            Log.d("OfflinePolls", "fetchOfflinePolls: ${offlinePollData.value}")
+        }
+    }
+
+    suspend fun insertPoll(poll: List<Poll>) {
+        pollDao.insertPoll(poll)
+    }
+
+    suspend fun deleteAllPolls() {
+        pollDao.deleteAllPolls()
     }
 
     private fun fetchPollData(){
         firestore.collection(POLLS).get().addOnSuccessListener {
             pollData.value = it.toObjects(PollData::class.java)
             Log.d("POLLS", "fetchPollData: ${pollData.value}")
+            viewModelScope.launch {
+                deleteAllPolls()
+                insertPoll(pollData.value!!.map {
+                    Poll(
+                        id = it.id,
+                        endTime = it.endTime,
+                        question = it.question,
+                        option1 = it.option1,
+                        option2 = it.option2,
+                        status = it.status
+                        )
+                    }
+                )
+                fetchOfflinePolls()
+            }
         }.addOnFailureListener {
             Log.d("POLLS", "fetchPollData: ${it.message}")
         }
