@@ -1,5 +1,6 @@
 import android.app.NotificationManager
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,19 +10,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,22 +54,44 @@ fun PollScreen(vm: PollViewModel, navController: NavController) {
     val context = LocalContext.current
     var selectedTab by remember { mutableStateOf("active") }
 
+    LaunchedEffect(key1 = true) {
+        vm.checkAndArchiveExpiredPolls()
+    }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Home",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Row(modifier = Modifier.statusBarsPadding()) {
+                        Text(
+                            text = "Polls",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = Icons.Rounded.Person,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(end = 10.dp)
+                                .size(30.dp)
+                                .clickable {
+                                    navController.navigate(ApplicationNavigation.Profile.route)
+                                }
+                        )
+                    }
                 },
-                modifier = Modifier.statusBarsPadding(),
                 colors = TopAppBarDefaults.smallTopAppBarColors(
                     containerColor = Color(0xFF6200EE)
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { navController.navigate(ApplicationNavigation.Create.route) }, modifier = Modifier.padding(20.dp)) {
+                Icon(imageVector = Icons.Rounded.Add, contentDescription = "")
+            }
         }
     ) { paddingValues ->
         Column(
@@ -84,7 +115,7 @@ fun PollScreen(vm: PollViewModel, navController: NavController) {
 
                 Button(
                     onClick = { selectedTab = "archive" },
-                    colors =  ButtonDefaults.buttonColors(
+                    colors = ButtonDefaults.buttonColors(
                         backgroundColor = if (selectedTab == "archive") Color.Gray else Color.LightGray
                     )
                 ) {
@@ -110,7 +141,11 @@ fun PollScreen(vm: PollViewModel, navController: NavController) {
                             question = item.question,
                             onItemClicked = {
                                 if (item.id.isNotEmpty()) {
-                                    navController.navigate(ApplicationNavigation.Vote.createRoute(item.id))
+                                    navController.navigate(
+                                        ApplicationNavigation.Vote.createRoute(
+                                            item.id
+                                        )
+                                    )
                                 }
                             }
                         )
@@ -126,12 +161,12 @@ fun PollScreen(vm: PollViewModel, navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = { vm.checkAndArchiveExpiredPolls() },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(text = "Create Temp Notification")
-            }
+//            Button(
+//                onClick = { vm.sendNotificationToAllUsers("App","sa") },
+//                modifier = Modifier.align(Alignment.CenterHorizontally)
+//            ) {
+//                Text(text = "Create Temp Notification")
+//            }
         }
     }
 }
@@ -166,6 +201,7 @@ private fun showNotification(context: Context) {
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setAutoCancel(true)
 
-    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val notificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.notify(notificationId, builder.build())
 }

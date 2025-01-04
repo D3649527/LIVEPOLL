@@ -2,6 +2,7 @@ package uk.ac.tees.mad.livepoll.presentation.navigation
 
 import CreatePoll
 import PollScreen
+import ProfileScreen
 import VotingScreen
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -24,7 +25,6 @@ sealed class ApplicationNavigation(val route : String){
     object Vote : ApplicationNavigation("poll/{pollId}"){
         fun createRoute(pollId : String) = "poll/$pollId"
     }
-    object Result : ApplicationNavigation("result")
     object Profile : ApplicationNavigation("profile")
 }
 
@@ -54,6 +54,9 @@ fun ApplicationNavigation(){
         ) { backStackEntry ->
             val pollId = backStackEntry.arguments?.getString("pollId")
             VotingScreen(viewModel, navController, pollId)
+        }
+        composable(route = ApplicationNavigation.Profile.route){
+            ProfileScreen(viewModel,navController)
         }
     }
 }
