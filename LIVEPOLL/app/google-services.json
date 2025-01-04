@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "8951666560",
-    "project_id": "livepoll-a5de8",
+    "project_number": "100069216322",
+    "project_id": "livepoll-88903",
     "storage_bucket": "livepoll-a5de8.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:8951666560:android:6abab4fa9e0c02391cd365",
+        "mobilesdk_app_id": "1:100069216322:android:f4099026f137f995651ddb",
         "android_client_info": {
           "package_name": "uk.ac.tees.mad.livepoll"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBMpYu6fsqbOKDqfL_l7lhmOhYrSC5JVjY"
+          "current_key": "AIzaSyC2P4uJfDlGNI8csH0J94wpq5TUKk5NOuE"
         }
       ],
       "services": {
