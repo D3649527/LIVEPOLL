@@ -102,6 +102,7 @@ fun CreatePoll(viewModel: PollViewModel, navController : NavController) {
 
             ActionButton(text = "CREATE POLL", onClick = {
                 viewModel.createPoll(
+                    context = context,
                     question = question,
                     option1 = option1,
                     option2 = option2,

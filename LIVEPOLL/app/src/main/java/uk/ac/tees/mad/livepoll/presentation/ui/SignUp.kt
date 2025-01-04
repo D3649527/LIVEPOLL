@@ -82,7 +82,7 @@ fun SignUp(vm : PollViewModel, navController: NavController) {
             if (isLoading) {
                 CircularProgressIndicator()
             } else {
-                Text(text = "LOG IN")
+                Text(text = "SIGN UN")
             }
         }
         Spacer(modifier = Modifier.height(20.dp))

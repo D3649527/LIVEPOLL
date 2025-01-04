@@ -1,5 +1,6 @@
 package uk.ac.tees.mad.livepoll.presentation.viewmodel
 
+import android.app.NotificationManager
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -7,6 +8,7 @@ import android.widget.Toast
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -25,6 +27,7 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import org.json.JSONObject
 import uk.ac.tees.mad.livepoll.POLLS
+import uk.ac.tees.mad.livepoll.R
 import uk.ac.tees.mad.livepoll.USER
 import uk.ac.tees.mad.livepoll.USER_VOTES
 import uk.ac.tees.mad.livepoll.data.PollData
@@ -73,6 +76,7 @@ class PollViewModel @Inject constructor(
                 )
             )
             fetchUserData()
+            fetchPollData()
             isLoading.value = false
             isLoggedIn.value = true
             subscribeToNotifications()
@@ -89,6 +93,7 @@ class PollViewModel @Inject constructor(
             isLoading.value = false
             isLoggedIn.value = true
             fetchUserData()
+            fetchPollData()
             subscribeToNotifications()
         }.addOnFailureListener {
             isLoading.value = false
@@ -98,15 +103,21 @@ class PollViewModel @Inject constructor(
     }
 
     fun fetchUserData() {
-        firestore.collection(USER).document(auth.currentUser!!.uid).get().addOnSuccessListener {
-            user.value = it.toObject(userData::class.java)
-        }.addOnFailureListener {
-            Log.d("FetchFailed", "fetchUserData: ${it.message}")
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            firestore.collection(USER).document(currentUser.uid).get().addOnSuccessListener {
+                user.value = it.toObject(userData::class.java)
+            }.addOnFailureListener {
+                Log.d("FetchFailed", "fetchUserData: ${it.message}")
+            }
+        } else {
+            Log.d("FetchFailed", "Current user is null. Cannot fetch user data.")
         }
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
     fun createPoll(
+        context: Context,
         question: String,
         option1: String,
         option2: String,
@@ -148,7 +159,7 @@ class PollViewModel @Inject constructor(
                         isLoading.value = false
                         onSuccess()
                         fetchPollData()
-
+                        showUploadedNotification(context = context ,question = question)
                     }
                         .addOnFailureListener {
                             isLoading.value = false
@@ -159,6 +170,19 @@ class PollViewModel @Inject constructor(
                     onValidationError("Failed to create poll. Please try again.")
                 }
         }
+    }
+
+    private fun showUploadedNotification(context: Context, question: String) {
+        val notificationId = 1
+        val builder = NotificationCompat.Builder(context, "poll_channel")
+            .setSmallIcon(R.drawable.designer)
+            .setContentTitle("New Poll")
+            .setContentText(question)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(notificationId, builder.build())
     }
 
     private fun subscribeToNotifications() {

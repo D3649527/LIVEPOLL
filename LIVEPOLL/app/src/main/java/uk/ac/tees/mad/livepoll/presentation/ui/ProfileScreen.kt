@@ -175,7 +175,7 @@ fun ProfileScreen(viewModel: PollViewModel, navController: NavHostController) {
             }
             if (isLoading.value){
                 Box(modifier = Modifier.fillMaxSize()){
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center).background(MaterialTheme.colors.background))
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
             }
         }

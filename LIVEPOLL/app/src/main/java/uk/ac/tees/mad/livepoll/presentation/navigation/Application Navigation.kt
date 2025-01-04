@@ -4,6 +4,7 @@ import CreatePoll
 import PollScreen
 import ProfileScreen
 import VotingScreen
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -32,31 +33,36 @@ sealed class ApplicationNavigation(val route : String){
 fun ApplicationNavigation(){
     val navController = rememberNavController()
     val viewModel : PollViewModel = hiltViewModel()
-    NavHost(navController = navController, startDestination = ApplicationNavigation.Splash.route) {
-        composable(route = ApplicationNavigation.Splash.route){
-            SplashScreen(navController)
-        }
-        composable(route = ApplicationNavigation.Login.route){
-            LoginScreen(viewModel,navController)
-        }
-        composable(route = ApplicationNavigation.Signup.route){
-            SignUp(vm = viewModel,navController = navController)
-        }
-        composable(route = ApplicationNavigation.Poll.route){
-            PollScreen(viewModel,navController)
-        }
-        composable(route = ApplicationNavigation.Create.route){
-            CreatePoll(viewModel, navController)
-        }
-        composable(
-            route = ApplicationNavigation.Vote.route,
-            arguments = listOf(navArgument("pollId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val pollId = backStackEntry.arguments?.getString("pollId")
-            VotingScreen(viewModel, navController, pollId)
-        }
-        composable(route = ApplicationNavigation.Profile.route){
-            ProfileScreen(viewModel,navController)
+    Surface {
+        NavHost(
+            navController = navController,
+            startDestination = ApplicationNavigation.Splash.route
+        ) {
+            composable(route = ApplicationNavigation.Splash.route) {
+                SplashScreen(navController)
+            }
+            composable(route = ApplicationNavigation.Login.route) {
+                LoginScreen(viewModel, navController)
+            }
+            composable(route = ApplicationNavigation.Signup.route) {
+                SignUp(vm = viewModel, navController = navController)
+            }
+            composable(route = ApplicationNavigation.Poll.route) {
+                PollScreen(viewModel, navController)
+            }
+            composable(route = ApplicationNavigation.Create.route) {
+                CreatePoll(viewModel, navController)
+            }
+            composable(
+                route = ApplicationNavigation.Vote.route,
+                arguments = listOf(navArgument("pollId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val pollId = backStackEntry.arguments?.getString("pollId")
+                VotingScreen(viewModel, navController, pollId)
+            }
+            composable(route = ApplicationNavigation.Profile.route) {
+                ProfileScreen(viewModel, navController)
+            }
         }
     }
 }
