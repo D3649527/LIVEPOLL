@@ -1,16 +1,31 @@
 import android.app.NotificationManager
 import android.content.Context
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +43,7 @@ import uk.ac.tees.mad.livepoll.presentation.viewmodel.PollViewModel
 @Composable
 fun PollScreen(vm: PollViewModel, navController: NavController) {
     val context = LocalContext.current
+    var selectedTab by remember { mutableStateOf("active") }
 
     Scaffold(
         topBar = {
@@ -37,12 +53,12 @@ fun PollScreen(vm: PollViewModel, navController: NavController) {
                         text = "Home",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White // Set text color explicitly
+                        color = Color.White
                     )
                 },
-                modifier = Modifier.statusBarsPadding(), // Avoid merging with status bar
+                modifier = Modifier.statusBarsPadding(),
                 colors = TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = Color(0xFF6200EE) // Background color for the top app bar
+                    containerColor = Color(0xFF6200EE)
                 )
             )
         }
@@ -53,11 +69,40 @@ fun PollScreen(vm: PollViewModel, navController: NavController) {
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            val pollList = vm.pollData.value
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(
+                    onClick = { selectedTab = "active" },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = if (selectedTab == "active") Color.Gray else Color.LightGray
+                    )
+                ) {
+                    Text(text = "Active Polls")
+                }
 
-            if (pollList != null && pollList.isNotEmpty()) {
+                Button(
+                    onClick = { selectedTab = "archive" },
+                    colors =  ButtonDefaults.buttonColors(
+                        backgroundColor = if (selectedTab == "archive") Color.Gray else Color.LightGray
+                    )
+                ) {
+                    Text(text = "Archived Polls")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val pollList = when (selectedTab) {
+                "active" -> vm.pollData.value?.filter { it.status == "active" }
+                "archive" -> vm.pollData.value?.filter { it.status == "archive" }
+                else -> emptyList()
+            }
+
+            if (!pollList.isNullOrEmpty()) {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp), // Space between items
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(pollList) { item ->
@@ -79,10 +124,10 @@ fun PollScreen(vm: PollViewModel, navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp)) // Space between the list and the button
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { showNotification(context) },
+                onClick = { vm.checkAndArchiveExpiredPolls() },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text(text = "Create Temp Notification")
@@ -99,7 +144,7 @@ fun PollCard(question: String, onItemClicked: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F1F1)) // Light background for card
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F1F1))
     ) {
         Text(
             text = question,

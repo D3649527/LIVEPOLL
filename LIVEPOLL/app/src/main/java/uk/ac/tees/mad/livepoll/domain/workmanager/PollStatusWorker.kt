@@ -21,7 +21,7 @@ class PollStatusWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         return try {
             val currentTime = com.google.firebase.Timestamp.now()
-            Log.d("PollWorker", "Current time in millis: $currentTime")
+            Log.d("PollWorker", "Current time: $currentTime")
 
             val activePolls = firestore.collection("polls")
                 .whereEqualTo("status", "active")
@@ -37,6 +37,7 @@ class PollStatusWorker @AssistedInject constructor(
                     .document(document.id)
                     .update("status", "archive")
                     .await()
+                Log.d("PollWorker", "Poll ${document.id} archived successfully")
             }
 
             Log.d("PollWorker", "Worker completed successfully")

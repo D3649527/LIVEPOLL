@@ -8,15 +8,19 @@ import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import uk.ac.tees.mad.livepoll.POLLS
 import uk.ac.tees.mad.livepoll.USER
+import uk.ac.tees.mad.livepoll.USER_VOTES
 import uk.ac.tees.mad.livepoll.data.PollData
 import java.util.Calendar
 import javax.inject.Inject
@@ -139,7 +143,6 @@ class PollViewModel @Inject constructor(
     }
 
     fun notifyUsersAboutNewPoll(pollQuestion: String) {
-        // Fetch all user FCM tokens from Firestore
         firestore.collection(USER).get().addOnSuccessListener { users ->
             for (user in users.documents) {
                 val fcmToken = user.getString("fcmToken") ?: continue
@@ -169,14 +172,68 @@ class PollViewModel @Inject constructor(
             }
     }
 
-    fun getPollById(id: String?):PollData {
-        var response = PollData()
-        firestore.collection(POLLS).document(id!!).get().addOnSuccessListener {
-            response = it.toObject(PollData::class.java)!!
-        }.addOnFailureListener {
-            response = PollData()
+    suspend fun voteForOption(pollId: String, option: String,failed:()-> Unit) {
+        val userId = auth.currentUser?.uid ?: return
+
+        val userVoteDoc = firestore.collection(USER_VOTES).document("$userId-$pollId")
+
+        val userVoteSnapshot = userVoteDoc.get().await()
+        if (userVoteSnapshot.exists()) {
+            Log.d("TAG", "User has already voted for this poll")
+            failed()
+            return
         }
-        return response
+
+        firestore.runTransaction { transaction ->
+            val pollRef = firestore.collection(POLLS).document(pollId)
+            val snapshot = transaction.get(pollRef)
+
+            val currentVotes = snapshot.getLong("$option.votes") ?: 0
+            transaction.update(pollRef, "$option.votes", currentVotes + 1)
+
+            transaction.set(userVoteDoc, mapOf("votedOption" to option))
+        }.await()
+    }
+
+    suspend fun getPollById(id: String?): PollData? {
+        return try {
+            val documentSnapshot = firestore.collection(POLLS).document(id!!).get().await()
+            documentSnapshot.toObject(PollData::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun checkAndArchiveExpiredPolls() {
+        viewModelScope.launch {
+            try {
+                val currentTime = com.google.firebase.Timestamp.now()
+                Log.d("PollWorker", "Current time: $currentTime")
+
+                // Fetch active polls that need to be archived
+                val activePolls = firestore.collection("polls")
+                    .whereEqualTo("status", "active")
+                    .whereLessThan("endTime", currentTime)
+                    .get()
+                    .await()
+
+                Log.d("PollWorker", "Fetched ${activePolls.documents.size} active polls")
+
+                // Update the status of each expired poll
+                activePolls.documents.forEach { document ->
+                    Log.d("PollWorker", "Archiving poll with id: ${document.id}")
+                    firestore.collection("polls")
+                        .document(document.id)
+                        .update("status", "archive")
+                        .await()
+                    Log.d("PollWorker", "Poll ${document.id} archived successfully")
+                }
+
+                Log.d("PollWorker", "Worker completed successfully")
+            } catch (e: Exception) {
+                Log.e("PollWorker", "Error during check and archive: ${e.localizedMessage}", e)
+            }
+        }
     }
 
 }

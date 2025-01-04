@@ -4,6 +4,7 @@ import androidx.navigation.NavController
 
 const val USER = "user"
 const val POLLS = "polls"
+const val USER_VOTES = "user_votes"
 
 
 

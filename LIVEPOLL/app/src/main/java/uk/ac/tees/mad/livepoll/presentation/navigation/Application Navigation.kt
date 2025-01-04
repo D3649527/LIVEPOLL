@@ -2,6 +2,7 @@ package uk.ac.tees.mad.livepoll.presentation.navigation
 
 import CreatePoll
 import PollScreen
+import VotingScreen
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -12,7 +13,6 @@ import androidx.navigation.navArgument
 import uk.ac.tees.mad.livepoll.presentation.ui.LoginScreen
 import uk.ac.tees.mad.livepoll.presentation.ui.SignUp
 import uk.ac.tees.mad.livepoll.presentation.ui.SplashScreen
-import uk.ac.tees.mad.livepoll.presentation.ui.VotingScreen
 import uk.ac.tees.mad.livepoll.presentation.viewmodel.PollViewModel
 
 sealed class ApplicationNavigation(val route : String){
